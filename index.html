@@ -109,36 +109,28 @@
 
           let blown = false;
 
-          function detectBlow() {
-            analyser.getByteFrequencyData(dataArray);
+        function detectBlow() {
+  analyser.getByteTimeDomainData(dataArray);
 
-            let highFreqSum = 0;
-            let lowFreqSum = 0;
+  let sum = 0;
 
-            const midpoint = dataArray.length / 2;
+  for (let i = 0; i < dataArray.length; i++) {
+    const value = (dataArray[i] - 128) / 128;
+    sum += value * value;
+  }
 
-            for (let i = 0; i < dataArray.length; i++) {
-              if (i < midpoint) {
-                lowFreqSum += dataArray[i];
-              } else {
-                highFreqSum += dataArray[i];
-              }
-            }
+  const volume = Math.sqrt(sum / dataArray.length);
 
-            const highAvg = highFreqSum / (dataArray.length / 2);
-            const lowAvg = lowFreqSum / (dataArray.length / 2);
+  // Blow detection threshold
+  const BLOW_THRESHOLD = 0.12;
 
-            const ratio = highAvg / (lowAvg + 1);
+  if (volume > BLOW_THRESHOLD && !blown) {
+    blown = true;
+    blowOutCandles();
+  }
 
-            const BLOW_RATIO_THRESHOLD = 0.5;
-
-            if (ratio > BLOW_RATIO_THRESHOLD && !blown) {
-              blown = true;
-              blowOutCandles();
-            }
-
-            requestAnimationFrame(detectBlow);
-          }
+  requestAnimationFrame(detectBlow);
+}
 
           detectBlow();
         } catch (err) {
